@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self';">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0">
     <meta name="description" content="SubPilot - Gestionnaire intelligent d'abonnements pour suivre et optimiser vos dépenses récurrentes">
@@ -22,9 +23,10 @@
     <div class="app-container">
         <!-- Sidebar -->
         <nav class="sidebar">
-            <div class="sidebar-header">
-                <h1><i class="fas fa-rocket"></i> SubPilot</h1>
+            <div class="sidebar-header" style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.3em;">
+                <h1 style="margin-bottom:0;"><i class="fas fa-rocket"></i> SubPilot</h1>
             </div>
+            <ul class="sidebar-menu">
             <ul class="sidebar-menu">
                 <li class="menu-item active" data-section="dashboard">
                     <i class="fas fa-tachometer-alt"></i>
@@ -34,19 +36,14 @@
                     <i class="fas fa-credit-card"></i>
                     <span>Abonnements</span>
                 </li>
-                <li class="menu-item" data-section="categories">
-                    <i class="fas fa-tags"></i>
-                    <span>Catégories</span>
-                </li>
-                <li class="menu-item" data-section="statistiques">
-                    <i class="fas fa-chart-pie"></i>
-                    <span>Statistiques</span>
-                </li>
                 <li class="menu-item" data-section="corbeille">
                     <i class="fas fa-trash"></i>
                     <span>Corbeille</span>
                 </li>
             </ul>
+            <div id="sidebar-version" style="position: absolute; left: 0; bottom: 18px; width: 100%; display: flex; justify-content: center; align-items: center;">
+                <!-- Version dynamique JS -->
+            </div>
         </nav>
 
         <!-- Main Content -->
@@ -65,126 +62,55 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon">
-                            <i class="fas fa-layer-group"></i>
+                            <i class="fas fa-list-ol"></i>
                         </div>
                         <div class="stat-content">
-                            <h3 id="total-actifs">0</h3>
-                            <p>Abonnements actifs</p>
+                            <h3 id="total-abonnements">0</h3>
+                            <p>Total abonnements</p>
+                            <div style="display: flex; gap: 1.5rem; justify-content: center; margin-top: 0.5rem;">
+                                <span style="color: #22c55e;"><i class="fas fa-user-check"></i> <span id="total-actifs">0</span> actifs</span>
+                                <span style="color: #ef4444;"><i class="fas fa-user-slash"></i> <span id="total-inactifs">0</span> inactifs</span>
+                                <span style="color: #6366f1;"><i class="fas fa-trash"></i> <span id="total-corbeille-mini">0</span> corbeille</span>
+                            </div>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">
                             <i class="fas fa-euro-sign"></i>
                         </div>
-                        <div class="stat-content">
-                            <h3 id="cout-mensuel">0,00 €</h3>
-                            <p>Total mensuel (tous abonnements)</p>
-                            <small id="cout-mensuel-only">dont <span>0,00 €</span> mensuels</small>
+                        <div class="stat-content" style="display: flex; flex-direction: column; gap: 0.5em;">
+                            <div style="background: #e0f7fa; border-radius: 8px; padding: 0.5em 0.8em; display: flex; flex-direction: column; gap: 0.2em; font-weight: 600; font-size: 1.15em; color: #0288d1;">
+                                <span style="display: flex; align-items: center; gap: 0.5em;"><i class="fas fa-calendar-day"></i> Mensuel : <span id="cout-mensuel">0,00 €</span></span>
+                                <span style="font-size:0.95em; color:#0891b2; font-weight:400; margin-left:2em;">dont <span id="val-mensuel">0,00 €</span> mensuel</span>
+                            </div>
+                            <div style="background: #f3e8ff; border-radius: 8px; padding: 0.5em 0.8em; display: flex; flex-direction: column; gap: 0.2em; font-size: 1em; color: #7c3aed;">
+                                <span style="display: flex; align-items: center; gap: 0.5em;"><i class="fas fa-calendar-alt"></i> Annuel : <span id="cout-annuel">0,00 €</span></span>
+                                <span style="font-size:0.95em; color:#a21caf; font-weight:400; margin-left:2em;">dont <span id="val-annuel">0,00 €</span> annuel</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-calendar-alt"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="cout-annuel">0,00 €</h3>
-                            <p>Total annuel (tous abonnements)</p>
-                            <small id="cout-annuel-only">dont <span>0,00 €</span> annuels</small>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-wallet"></i>
-                        </div>
-                        <div class="stat-content">
-                            <form id="balance-form" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
-                                <div style="display: flex; align-items: center; gap: 6px;">
-                                    <input type="number" id="balance-input" step="0.01" min="0" style="width: 90px; font-size: 1.2em; font-weight: bold;" />
-                                    <button type="submit" class="btn btn-xs" style="padding: 2px 8px; font-size: 0.9em;">💾</button>
-                                </div>
-                                <label for="balance-input" style="font-size: 0.95em; color: #666;">Solde</label>
-                                <small id="balance-diff"></small>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                <!-- Rien d'autre que les cartes -->
+            </section>
 
-                <div class="dashboard-content">
-                    <div class="recent-section">
-                        <h3>Abonnements récents</h3>
-                        <div id="recent-abonnements" class="abonnements-grid">
-                            <!-- Abonnements récents seront affichés ici -->
-                        </div>
-                    </div>
-                    
-                    <div class="categories-section">
-                        <h3>Répartition par catégorie</h3>
-                        <div id="categories-chart" class="categories-chart">
-                            <!-- Graphique des catégories -->
-                        </div>
-                    </div>
+
+            <!-- Corbeille Section -->
+            <section id="corbeille-section" class="content-section">
+                <div class="corbeille-section">
+                    <div id="corbeille-abonnements" class="abonnements-grid"></div>
                 </div>
             </section>
 
             <!-- Abonnements Section -->
             <section id="abonnements-section" class="content-section">
-                <div class="section-controls">
-                    <div class="search-filter">
-                        <input type="text" id="search-input" placeholder="Rechercher un abonnement...">
-                        <select id="category-filter">
-                            <option value="">Toutes les catégories</option>
-                        </select>
-                        <select id="status-filter">
-                            <option value="">Tous les statuts</option>
-                            <option value="actif">Actifs</option>
-                            <option value="inactif">Inactifs</option>
-                        </select>
-                    </div>
-                </div>
                 <div id="abonnements-list" class="abonnements-grid">
                     <!-- Les abonnements seront affichés ici -->
                 </div>
             </section>
 
-            <!-- Corbeille Section -->
-            <section id="corbeille-section" class="content-section" style="display:none">
-                <div class="section-controls">
-                    <h3>Corbeille (abonnements supprimés, suppression définitive après 30 jours)</h3>
-                </div>
-                <div id="corbeille-list" class="abonnements-grid">
-                    <!-- Les abonnements en corbeille seront affichés ici -->
-                </div>
-            </section>
+            <!-- Suppression de la section Corbeille -->
 
-            <!-- Categories Section -->
-            <section id="categories-section" class="content-section">
-                <div class="section-controls">
-                    <button class="btn btn-primary" id="add-category-btn">
-                        <i class="fas fa-plus"></i> Nouvelle catégorie
-                    </button>
-                </div>
-                <div id="categories-list" class="categories-grid">
-                    <!-- Les catégories seront affichées ici -->
-                </div>
-            </section>
+            <!-- Suppression de la section Catégories -->
 
-            <!-- Statistiques Section -->
-            <section id="statistiques-section" class="content-section">
-                <div class="stats-detailed">
-                    <div class="chart-container">
-                        <h3>Évolution des coûts</h3>
-                        <div id="cost-chart" class="chart-placeholder">
-                            <p>Graphique des coûts par mois</p>
-                        </div>
-                    </div>
-                    <div class="breakdown-container">
-                        <h3>Détail par catégorie</h3>
-                        <div id="category-breakdown" class="breakdown-list">
-                            <!-- Détail des catégories -->
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <!-- Suppression de la section Statistiques -->
         </main>
     </div>
 
@@ -208,14 +134,7 @@
                         <label for="prix">Prix *</label>
                         <input type="number" id="prix" name="prix" step="0.01" min="0" required>
                     </div>
-                    <div class="form-group">
-                        <label for="devise">Devise</label>
-                        <select id="devise" name="devise">
-                            <option value="EUR">EUR (€)</option>
-                            <option value="USD">USD ($)</option>
-                            <option value="GBP">GBP (£)</option>
-                        </select>
-                    </div>
+                    <!-- Champ devise supprimé -->
                 </div>
                 
                 <div class="form-row">
@@ -223,16 +142,9 @@
                         <label for="frequence">Fréquence *</label>
                         <select id="frequence" name="frequence" required>
                             <option value="mensuel">Mensuel</option>
-                            <option value="annuel">Annuel</option>
-                            <option value="hebdomadaire">Hebdomadaire</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="categorie_id">Catégorie</label>
-                        <select id="categorie_id" name="categorie_id">
-                            <option value="">Sélectionner une catégorie</option>
-                        </select>
-                    </div>
+                    <!-- Suppression du champ catégorie -->
                 </div>
                 
                 <div class="form-row">
@@ -240,21 +152,9 @@
                         <label for="date_debut">Date de début *</label>
                         <input type="date" id="date_debut" name="date_debut" required>
                     </div>
-                    <div class="form-group">
-                        <label for="date_fin">Date de fin</label>
-                        <input type="date" id="date_fin" name="date_fin">
-                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="site_web">Site web</label>
-                    <input type="url" id="site_web" name="site_web" placeholder="https://example.com">
-                </div>
-                
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="3"></textarea>
-                </div>
+                <!-- Champs site web et description supprimés -->
                 
 
                 <div class="form-group" style="display: flex; align-items: center; gap: 12px; margin-top: 10px;">
@@ -270,36 +170,7 @@
         </div>
     </div>
 
-    <!-- Modal Catégorie -->
-    <div id="category-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Nouvelle catégorie</h3>
-                <button class="close-btn" id="close-category-modal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="category-form" class="modal-form">
-                <div class="form-group">
-                    <label for="category-nom">Nom de la catégorie *</label>
-                    <input type="text" id="category-nom" name="nom" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="category-couleur">Couleur</label>
-                    <div class="color-input-group">
-                        <input type="color" id="category-couleur" name="couleur" value="#007bff">
-                        <div class="color-preview" id="color-preview"></div>
-                    </div>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" id="cancel-category">Annuler</button>
-                    <button type="submit" class="btn btn-primary">Créer</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <!-- Suppression du modal catégorie -->
 
     <!-- Notification Container -->
     <div id="notification-container" class="notification-container"></div>

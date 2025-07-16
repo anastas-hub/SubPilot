@@ -1,14 +1,12 @@
 {
   "name": "subpilot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Application de gestion d'abonnements simple et élégante",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
-    "build": "electron-builder",
-    "build:win": "electron-builder --win",
-    "test": "node test-api.js"
+    "build": "electron-builder"
   },
   "keywords": [
     "abonnements",
@@ -24,8 +22,7 @@
     "electron-builder": "^24.9.1"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "sqlite3": "^5.1.6"
+    "express": "^4.18.2"
   },
   "build": {
     "appId": "com.anastas.subpilot",
@@ -42,7 +39,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/icon.ico"

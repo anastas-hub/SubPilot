@@ -1,17 +1,24 @@
 .no-abonnement-message, .no-abonnements-message, .no-subscription-message {
-    background: linear-gradient(135deg, #f8fafc 80%, #e2e8f0 100%);
-    box-shadow: 0 4px 16px rgba(99,102,241,0.06);
-    border-radius: 12px;
-    padding: 14px 6px 10px 6px;
-    max-width: 220px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 18px;
-    margin-bottom: 8px;
+    /* Styles conservés pour l'icône uniquement */
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    max-width: none;
+    margin: 0;
+    min-height: 0;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
+    justify-content: center;
+    gap: 0;
+    position: static;
+    top: auto;
+    left: auto;
+    transform: none;
+    text-align: center;
+/* removed extra closing brace */
 }
 .no-abonnement-message .fa-credit-card,
 .no-abonnements-message .fa-credit-card,
@@ -32,23 +39,9 @@
     opacity: 1;
 }
 .no-abonnement-message h2,
-.no-abonnements-message h2,
-.no-subscription-message h2 {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--dark-color);
-    margin-bottom: 4px;
-    letter-spacing: -0.01em;
-}
+/* h2 supprimé */
 .no-abonnement-message p,
-.no-abonnements-message p,
-.no-subscription-message p {
-    color: var(--secondary-color);
-    font-size: 0.7rem;
-    font-weight: 400;
-    margin-bottom: 0;
-    opacity: 0.7;
-}
+/* p supprimé */
 .no-abonnement-message > div,
 .no-abonnements-message > div,
 .no-subscription-message > div {

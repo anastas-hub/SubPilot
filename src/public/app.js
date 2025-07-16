@@ -1,34 +1,60 @@
-// Variables globales
+async function restoreAbonnement(id) {
+    if (!confirm('Restaurer cet abonnement ?')) return;
+    try {
+        const response = await fetch(`${API_BASE}/abonnements/${id}/restore`, { method: 'PATCH' });
+        if (!response.ok) throw new Error('Erreur lors de la restauration');
+        showNotification('Abonnement restauré', 'success');
+        // Rafraîchir la corbeille et les abonnements
+        if (typeof loadAbonnements === 'function') await loadAbonnements();
+        displayCorbeille();
+    } catch (error) {
+        showNotification('Erreur lors de la restauration', 'error');
+    }
+}
+async function deleteAbonnementDefinitif(id) {
+    if (!confirm('Supprimer définitivement cet abonnement ?')) return;
+    try {
+        const response = await fetch(`${API_BASE}/abonnements/${id}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Erreur lors de la suppression définitive');
+        showNotification('Abonnement supprimé définitivement', 'success');
+        // Rafraîchir la corbeille
+        if (typeof loadAbonnements === 'function') await loadAbonnements();
+        displayCorbeille();
+    } catch (error) {
+        showNotification('Erreur lors de la suppression définitive', 'error');
+    }
+}
 let abonnements = [];
-let categories = [];
 let currentEditId = null;
-
-// Configuration de l'API
 const API_BASE = '/api';
-
-// Éléments DOM (seront initialisés après chargement du DOM)
 let sidebar = null;
 let sections = null;
 let pageTitle = null;
 let abonnementModal = null;
-let categoryModal = null;
 let abonnementForm = null;
-let categoryForm = null;
-
-// Variables pour le responsive
-let isMobile = false;
-let isTablet = false;
-
-// Initialisation de l'application
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 Initialisation de SubPilot...');
     
     try {
         // Attendre un petit délai pour s'assurer que le DOM est complètement chargé
         await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Affichage fiable du numéro de version en bas à gauche
+        const SUBPILOT_VERSION = "1.0.1";
+        const sidebarVersion = document.getElementById('sidebar-version');
+        if (sidebarVersion) {
+            const versionEl = document.createElement('span');
+            versionEl.textContent = `v${SUBPILOT_VERSION}`;
+            versionEl.style.fontSize = '0.95em';
+            versionEl.style.color = '#6366f1';
+            versionEl.style.fontWeight = '600';
+            versionEl.style.background = '#eef2ff';
+            versionEl.style.borderRadius = '6px';
+            versionEl.style.padding = '2px 8px';
+            versionEl.style.marginTop = '2px';
+            sidebarVersion.appendChild(versionEl);
+        }
         
-        console.log('🔧 Détection de l\'appareil...');
-        detectDevice();
         
         console.log('🔧 Initialisation de l\'interface...');
         initializeApp();
@@ -36,32 +62,25 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.log('🔧 Configuration des événements...');
         setupEventListeners();
         
-        console.log('🔧 Configuration responsive...');
-        setupResponsive();
+        // Responsive supprimé
         
         console.log('📡 Chargement des données...');
         await loadData();
-        
         console.log('✅ Application initialisée avec succès');
     } catch (error) {
         console.error('❌ Erreur lors de l\'initialisation:', error);
         showNotification('Erreur lors de l\'initialisation: ' + error.message, 'error');
     }
 });
-
-// Initialisation
 function initializeApp() {
     console.log('🔧 Initialisation des éléments DOM...');
-    
     try {
         // Initialiser les références DOM globales
         sidebar = document.querySelector('.sidebar-menu');
         sections = document.querySelectorAll('.content-section');
         pageTitle = document.getElementById('page-title');
         abonnementModal = document.getElementById('abonnement-modal');
-        categoryModal = document.getElementById('category-modal');
         abonnementForm = document.getElementById('abonnement-form');
-        categoryForm = document.getElementById('category-form');
         
         console.log('🔧 Affichage de la section dashboard...');
         showSection('dashboard');
@@ -80,6 +99,7 @@ function initializeApp() {
         throw error;
     }
 }
+// ...existing code sans commentaires...
 
 function setupEventListeners() {
     console.log('🔧 Configuration des événements...');
@@ -94,7 +114,7 @@ function setupEventListeners() {
             console.warn('⚠️ Sidebar non trouvée (.sidebar-menu)');
         }
         
-        // Boutons principaux
+        updateDashboardCounts();
         const addAbonnementBtn = document.getElementById('add-abonnement-btn');
         if (addAbonnementBtn) {
             addAbonnementBtn.addEventListener('click', () => openAbonnementModal());
@@ -103,37 +123,31 @@ function setupEventListeners() {
             console.warn('⚠️ Bouton add-abonnement-btn non trouvé');
         }
         
-        const addCategoryBtn = document.getElementById('add-category-btn');
-        if (addCategoryBtn) {
-            addCategoryBtn.addEventListener('click', () => openCategoryModal());
-            console.log('✅ Bouton ajout catégorie configuré');
-        } else {
-            console.warn('⚠️ Bouton add-category-btn non trouvé');
-        }
-        
         // Modals - Close buttons
         const closeAbonnementBtn = document.getElementById('close-abonnement-modal');
         if (closeAbonnementBtn) {
-            closeAbonnementBtn.addEventListener('click', closeAbonnementModal);
             console.log('✅ Bouton fermeture modal abonnement configuré');
         }
-        
-        const closeCategoryBtn = document.getElementById('close-category-modal');
-        if (closeCategoryBtn) {
-            closeCategoryBtn.addEventListener('click', closeCategoryModal);
-            console.log('✅ Bouton fermeture modal catégorie configuré');
-        }
+
+function updateDashboardCounts() {
+    const total = abonnements.filter(a => !a.deleted_at).length;
+    const actifs = abonnements.filter(a => !a.deleted_at && (a.actif === true || a.actif === 1)).length;
+    const inactifs = abonnements.filter(a => !a.deleted_at && (a.actif === false || a.actif === 0)).length;
+    const corbeille = abonnements.filter(a => a.deleted_at).length;
+    const elTotal = document.getElementById('total-abonnements');
+    const elActifs = document.getElementById('total-actifs');
+    const elInactifs = document.getElementById('total-inactifs');
+    const elCorbeille = document.getElementById('total-corbeille-mini');
+    if (elTotal) elTotal.textContent = total;
+    if (elActifs) elActifs.textContent = actifs;
+    if (elInactifs) elInactifs.textContent = inactifs;
+    if (elCorbeille) elCorbeille.textContent = corbeille;
+}
         
         const cancelAbonnementBtn = document.getElementById('cancel-abonnement');
         if (cancelAbonnementBtn) {
             cancelAbonnementBtn.addEventListener('click', closeAbonnementModal);
             console.log('✅ Bouton annulation abonnement configuré');
-        }
-        
-        const cancelCategoryBtn = document.getElementById('cancel-category');
-        if (cancelCategoryBtn) {
-            cancelCategoryBtn.addEventListener('click', closeCategoryModal);
-            console.log('✅ Bouton annulation catégorie configuré');
         }
         
         // Formulaires
@@ -143,44 +157,17 @@ function setupEventListeners() {
             console.log('✅ Formulaire abonnement configuré');
         }
         
-        const categoryForm = document.getElementById('category-form');
-        if (categoryForm) {
-            categoryForm.addEventListener('submit', handleCategorySubmit);
-            console.log('✅ Formulaire catégorie configuré');
-        }
         
-        // Recherche et filtres
+        // Recherche
         const searchInput = document.getElementById('search-input');
         if (searchInput) {
             searchInput.addEventListener('input', handleSearch);
             console.log('✅ Champ recherche configuré');
         }
-        
-        const categoryFilter = document.getElementById('category-filter');
-        if (categoryFilter) {
-            categoryFilter.addEventListener('change', handleFilter);
-            console.log('✅ Filtre catégorie configuré');
-        }
-        
-        const statusFilter = document.getElementById('status-filter');
-        if (statusFilter) {
-            statusFilter.addEventListener('change', handleFilter);
-            console.log('✅ Filtre statut configuré');
-        }
-        
-        // Prévisualisation couleur
-        const colorInput = document.getElementById('category-couleur');
-        if (colorInput) {
-            colorInput.addEventListener('input', updateColorPreview);
-            console.log('✅ Prévisualisation couleur configurée');
-        }
-        
         // Fermer modals en cliquant à l'extérieur
         window.addEventListener('click', (e) => {
             const abonnementModal = document.getElementById('abonnement-modal');
-            const categoryModal = document.getElementById('category-modal');
             if (abonnementModal && e.target === abonnementModal) closeAbonnementModal();
-            if (categoryModal && e.target === categoryModal) closeCategoryModal();
         });
         
         console.log('✅ Tous les événements configurés avec succès');
@@ -192,7 +179,7 @@ function setupEventListeners() {
 }
 
 // Navigation
-function handleNavigation(e) {
+async function handleNavigation(e) {
     const item = e.target.closest('.menu-item');
     if (!item) return;
     
@@ -203,10 +190,11 @@ function handleNavigation(e) {
     document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
     item.classList.add('active');
     
-    showSection(section);
+    // Toujours rafraîchir même si déjà actif
+    showSection(section, true);
 }
 
-function showSection(sectionName) {
+async function showSection(sectionName, forceRefresh = false) {
     console.log(`🔄 Affichage de la section: ${sectionName}`);
     
     try {
@@ -232,14 +220,19 @@ function showSection(sectionName) {
             console.warn(`⚠️ Section ${sectionName}-section non trouvée`);
         }
         
-        // Mettre à jour le titre
+        // Mettre à jour le titre principal (sidebar)
+        const sidebarHeader = document.querySelector('.sidebar-header h1');
+        if (sidebarHeader) {
+            sidebarHeader.innerHTML = '<i class="fas fa-rocket"></i> SubPilot';
+        }
+
+        // Mettre à jour le titre de page
         const titles = {
             'dashboard': 'Tableau de bord',
             'abonnements': 'Mes abonnements',
-            'categories': 'Catégories',
-            'statistiques': 'Statistiques'
+            'statistiques': 'Statistiques',
+            'corbeille': 'Corbeille'
         };
-        
         const pageTitle = document.getElementById('page-title');
         if (pageTitle) {
             pageTitle.textContent = titles[sectionName] || 'SubPilot';
@@ -249,17 +242,18 @@ function showSection(sectionName) {
         // Charger les données spécifiques à la section
         switch(sectionName) {
             case 'dashboard':
-                loadDashboard();
+                await loadDashboard();
                 break;
             case 'abonnements':
+                if (typeof loadAbonnements === 'function') await loadAbonnements();
                 displayAbonnements();
                 break;
-            case 'categories':
-                displayCategories();
-                break;
             case 'statistiques':
-                loadStatistiques();
+                await loadStatistiques();
                 break;
+           case 'corbeille':
+               displayCorbeille();
+               break;
             default:
                 console.warn(`⚠️ Section inconnue: ${sectionName}`);
         }
@@ -271,19 +265,10 @@ function showSection(sectionName) {
 // Chargement des données
 async function loadData() {
     console.log('📡 Début du chargement des données...');
-    
     try {
-        console.log('📋 Chargement des catégories...');
-        await loadCategories();
-        
-        console.log('💳 Chargement des abonnements...');
+        console.log(' Chargement des abonnements...');
         await loadAbonnements();
-        
-        console.log('🔄 Mise à jour des sélecteurs...');
-        updateCategorySelects();
-        
         console.log('✅ Toutes les données chargées avec succès');
-        
     } catch (error) {
         console.error('❌ Erreur lors du chargement des données:', error);
         showNotification('Erreur lors du chargement des données: ' + error.message, 'error');
@@ -296,8 +281,7 @@ async function loadAbonnements() {
         const response = await fetch(`${API_BASE}/abonnements`);
         if (!response.ok) throw new Error('Erreur réseau');
         abonnements = await response.json();
-        console.log('Abonnements chargés:', abonnements.length);
-        
+        updateDashboardCounts();
         // Debug: Vérifier le format du champ actif
         if (abonnements.length > 0) {
             console.log('Premier abonnement (debug actif):', {
@@ -309,31 +293,29 @@ async function loadAbonnements() {
     } catch (error) {
         console.error('Erreur lors du chargement des abonnements:', error);
         abonnements = [];
+        updateDashboardCounts();
         throw error;
     }
 }
 
-async function loadCategories() {
-    try {
-        const response = await fetch(`${API_BASE}/categories`);
-        if (!response.ok) throw new Error('Erreur réseau');
-        categories = await response.json();
-        console.log('Catégories chargées:', categories.length);
-    } catch (error) {
-        console.error('Erreur lors du chargement des catégories:', error);
-        categories = [];
-        throw error;
-    }
+function updateDashboardCounts() {
+    const total = abonnements.filter(a => !a.deleted_at).length;
+    const actifs = abonnements.filter(a => !a.deleted_at && (a.actif === true || a.actif === 1)).length;
+    const inactifs = abonnements.filter(a => !a.deleted_at && (a.actif === false || a.actif === 0)).length;
+    const corbeille = abonnements.filter(a => a.deleted_at).length;
+    const elTotal = document.getElementById('total-abonnements');
+    const elActifs = document.getElementById('total-actifs');
+    const elInactifs = document.getElementById('total-inactifs');
+    const elCorbeille = document.getElementById('total-corbeille-mini');
+    if (elTotal) elTotal.textContent = total;
+    if (elActifs) elActifs.textContent = actifs;
+    if (elInactifs) elInactifs.textContent = inactifs;
+    if (elCorbeille) elCorbeille.textContent = corbeille;
 }
 
 async function loadDashboard() {
     try {
-        const response = await fetch(`${API_BASE}/stats/dashboard`);
-        if (!response.ok) throw new Error('Erreur réseau');
-        const stats = await response.json();
-        updateDashboardStats(stats);
         displayRecentAbonnements();
-        displayCategoriesChart(stats.repartitionCategories || []);
     } catch (error) {
         console.error('Erreur lors du chargement du dashboard:', error);
     }
@@ -344,7 +326,7 @@ async function loadStatistiques() {
         const response = await fetch(`${API_BASE}/stats/dashboard`);
         if (!response.ok) throw new Error('Erreur réseau');
         const stats = await response.json();
-        displayDetailedStats(stats);
+        // Suppression de l'affichage détaillé des stats par catégorie
     } catch (error) {
         console.error('Erreur lors du chargement des statistiques:', error);
     }
@@ -356,13 +338,7 @@ function displayAbonnements(abonnementsList = abonnements) {
     if (!container) return;
     
     if (abonnementsList.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-credit-card" style="font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;"></i>
-                <h3>Aucun abonnement</h3>
-                <p>Commencez par ajouter votre premier abonnement</p>
-            </div>
-        `;
+        container.innerHTML = '';
         return;
     }
     
@@ -384,17 +360,12 @@ function displayAbonnements(abonnementsList = abonnements) {
                 <div class="abonnement-price">
                     ${formatCurrency(abonnement.prix, abonnement.devise)}
                 </div>
-                <div class="abonnement-frequency">/${abonnement.frequence}</div>
+                <div class="abonnement-frequency">/mensuel</div>
                 <div class="abonnement-status ${statusClass}">
                     ${statusLabel}
                 </div>
             </div>
             <div class="abonnement-body">
-                ${abonnement.categorie_nom ? `
-                    <div class="abonnement-category" style="background-color: ${abonnement.categorie_couleur}20; color: ${abonnement.categorie_couleur};">
-                        ${abonnement.categorie_nom}
-                    </div>
-                ` : ''}
                 ${abonnement.description ? `
                     <div class="abonnement-description">${abonnement.description}</div>
                 ` : ''}
@@ -408,9 +379,6 @@ function displayAbonnements(abonnementsList = abonnements) {
                     <button class="btn btn-sm btn-primary" onclick="editAbonnement(${abonnement.id})" title="Modifier">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-warning" onclick="archiveAbonnement(${abonnement.id})" title="Archiver">
-                        <i class="fas fa-archive"></i>
-                    </button>
                     <button class="btn btn-sm btn-danger" onclick="trashAbonnement(${abonnement.id})" title="Mettre à la corbeille">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -421,6 +389,57 @@ function displayAbonnements(abonnementsList = abonnements) {
     }).join('');
 }
 
+// Affichage des abonnements dans la corbeille
+function displayCorbeille() {
+    const container = document.getElementById('corbeille-abonnements');
+    if (!container) return;
+    const corbeilleAbonnements = abonnements.filter(a => a.deleted_at);
+    if (corbeilleAbonnements.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    container.innerHTML = corbeilleAbonnements.map(abonnement => {
+        // Statuts
+        const isActive = abonnement.actif === 1 || abonnement.actif === true;
+        const isArchived = abonnement.archivee === 1 || abonnement.archivee === true;
+        let statusLabel = isActive ? 'Actif' : 'Inactif';
+        let statusClass = isActive ? 'status-active' : 'status-inactive';
+        if (isArchived) {
+            statusLabel = 'Archivé';
+            statusClass = 'status-archived';
+        }
+        return `
+        <div class="abonnement-card corbeille-item ${isActive ? '' : 'inactive'} ${isArchived ? 'archived' : ''}" data-id="${abonnement.id}">
+            <div class="abonnement-header">
+                <h4>${abonnement.nom}</h4>
+                <div class="abonnement-price">
+                    ${formatCurrency(abonnement.prix, abonnement.devise)}
+                </div>
+                <div class="abonnement-frequency">/mensuel</div>
+                <div class="abonnement-status ${statusClass}">
+                    ${statusLabel}
+                </div>
+            </div>
+            <div class="abonnement-body">
+                ${abonnement.description ? `
+                    <div class="abonnement-description">${abonnement.description}</div>
+                ` : ''}
+                <div class="abonnement-info">
+                    <small><i class="fas fa-calendar"></i> Depuis le ${formatDate(abonnement.date_debut)}</small>
+                </div>
+                <div class="abonnement-actions">
+                    <button class="btn btn-sm btn-success" onclick="restoreAbonnement(${abonnement.id})" title="Restaurer">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteAbonnementDefinitif(${abonnement.id})" title="Supprimer définitivement">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
 function displayRecentAbonnements() {
     const recentList = abonnements
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -441,107 +460,16 @@ function displayRecentAbonnements() {
                 <div class="abonnement-price">
                     ${formatCurrency(abonnement.prix, abonnement.devise)}
                 </div>
-                <div class="abonnement-frequency">/${abonnement.frequence}</div>
+                <div class="abonnement-frequency">/mensuel</div>
             </div>
-            <div class="abonnement-body">
-                ${abonnement.categorie_nom ? `
-                    <div class="abonnement-category" style="background-color: ${abonnement.categorie_couleur}20; color: ${abonnement.categorie_couleur};">
-                        ${abonnement.categorie_nom}
-                    </div>
-                ` : ''}
-            </div>
+            <div class="abonnement-body"></div>
         </div>
     `).join('');
 }
 
-function displayCategories() {
-    const container = document.getElementById('categories-list');
-    if (!container) {
-        console.warn('Container categories-list non trouvé');
-        return;
-    }
-    
-    console.log('Affichage des catégories:', categories.length);
-    
-    if (categories.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-tags"></i>
-                <h3>Aucune catégorie</h3>
-                <p>Créez des catégories pour organiser vos abonnements</p>
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = categories.map(category => `
-        <div class="category-card">
-            <div class="category-header">
-                <div class="category-color" style="background-color: ${category.couleur}"></div>
-                <div class="category-actions">
-                    <button class="btn btn-small btn-danger" onclick="deleteCategorie(${category.id})" title="Supprimer">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="category-name">${category.nom}</div>
-        </div>
-    `).join('');
-    
-    console.log('Categories affichées dans le DOM');
-}
 
-function displayCategoriesChart(repartitionCategories) {
-    const container = document.getElementById('categories-chart');
-    if (!container) return;
-    
-    if (repartitionCategories.length === 0) {
-        container.innerHTML = '<p class="text-center">Aucune données à afficher</p>';
-        return;
-    }
-    
-    container.innerHTML = repartitionCategories.map(cat => `
-        <div class="category-item">
-            <div class="category-info">
-                <div class="category-dot" style="background-color: ${cat.couleur};"></div>
-                <span>${cat.nom}</span>
-            </div>
-            <div class="category-amount">${formatCurrency(cat.coutMensuel || 0)}/mois</div>
-        </div>
-    `).join('');
-}
 
-function updateDashboardStats(stats) {
-    const totalActifs = document.getElementById('total-actifs');
-    if (totalActifs) totalActifs.textContent = stats.totalActifs || 0;
 
-    const coutMensuel = document.getElementById('cout-mensuel');
-    if (coutMensuel) coutMensuel.textContent = formatCurrency(stats.coutMensuel || 0);
-    const coutMensuelOnly = document.getElementById('cout-mensuel-only');
-    if (coutMensuelOnly) {
-        coutMensuelOnly.querySelector('span').textContent = formatCurrency(stats.coutMensuelOnly || 0);
-    }
-
-    const coutAnnuel = document.getElementById('cout-annuel');
-    if (coutAnnuel) coutAnnuel.textContent = formatCurrency(stats.coutAnnuel || 0);
-    const coutAnnuelOnly = document.getElementById('cout-annuel-only');
-    if (coutAnnuelOnly) {
-        coutAnnuelOnly.querySelector('span').textContent = formatCurrency(stats.coutAnnuelOnly || 0);
-    }
-
-    const balanceInput = document.getElementById('balance-input');
-    if (balanceInput) balanceInput.value = (stats.balance || 0).toFixed(2);
-    const balanceDiff = document.getElementById('balance-diff');
-    if (balanceDiff) {
-        // Show difference between balance and total monthly cost
-        const diff = (stats.balance || 0) - (stats.coutMensuel || 0);
-        let text = '';
-        if (!isNaN(diff)) {
-            text = (diff >= 0 ? '+ ' : '- ') + formatCurrency(Math.abs(diff)) + ' par mois';
-        }
-        balanceDiff.textContent = text;
-    }
-}
 
 // Gestion du formulaire de solde (balance)
 document.addEventListener('DOMContentLoaded', () => {
@@ -565,38 +493,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!response.ok) throw new Error('Erreur lors de la sauvegarde du solde');
                 // Rafraîchir les stats
                 await refreshDashboardStats();
-            } catch (err) {
+            } catch (error) {
                 alert('Erreur lors de la sauvegarde du solde.');
             }
         });
     }
 });
 
-function displayDetailedStats(stats) {
-    const container = document.getElementById('category-breakdown');
-    if (!container) return;
-    
-    if (!stats.repartitionCategories || stats.repartitionCategories.length === 0) {
-        container.innerHTML = '<p>Aucune donnée disponible</p>';
-        return;
-    }
-    
-    container.innerHTML = stats.repartitionCategories.map(cat => `
-        <div class="category-item">
-            <div class="category-info">
-                <div class="category-dot" style="background-color: ${cat.couleur};"></div>
-                <div>
-                    <div>${cat.nom}</div>
-                    <small>${cat.count} abonnement${cat.count !== 1 ? 's' : ''}</small>
-                </div>
-            </div>
-            <div>
-                <div class="category-amount">${formatCurrency(cat.coutMensuel || 0)}/mois</div>
-                <small>${formatCurrency((cat.coutMensuel || 0) * 12)}/an</small>
-            </div>
-        </div>
-    `).join('');
-}
 
 // Gestion des modals
 function openAbonnementModal(id = null) {
@@ -619,6 +522,11 @@ function openAbonnementModal(id = null) {
     }
     
     if (abonnementModal) abonnementModal.classList.add('show');
+    // Focus automatique sur le champ nom
+    setTimeout(() => {
+        const nomInput = document.getElementById('nom');
+        if (nomInput) nomInput.focus();
+    }, 100);
 }
 
 function closeAbonnementModal() {
@@ -627,22 +535,10 @@ function closeAbonnementModal() {
     if (abonnementForm) abonnementForm.reset();
 }
 
-function openCategoryModal() {
-    if (categoryForm) categoryForm.reset();
-    const colorInput = document.getElementById('category-couleur');
-    if (colorInput) colorInput.value = '#007bff';
-    updateColorPreview();
-    if (categoryModal) categoryModal.classList.add('show');
-}
 
-function closeCategoryModal() {
-    if (categoryModal) categoryModal.classList.remove('show');
-    if (categoryForm) categoryForm.reset();
-}
 
 function fillAbonnementForm(abonnement) {
-    const fields = ['nom', 'prix', 'devise', 'frequence', 'date_debut', 'date_fin', 'site_web', 'description', 'categorie_id'];
-    
+    const fields = ['nom', 'prix', 'devise', 'frequence', 'date_debut', 'date_fin', 'site_web', 'description', 'nb_jours'];
     fields.forEach(field => {
         const element = document.getElementById(field);
         if (element && abonnement[field] !== undefined) {
@@ -651,13 +547,6 @@ function fillAbonnementForm(abonnement) {
     });
 }
 
-function updateColorPreview() {
-    const colorInput = document.getElementById('category-couleur');
-    const preview = document.getElementById('color-preview');
-    if (colorInput && preview) {
-        preview.style.backgroundColor = colorInput.value;
-    }
-}
 
 // Gestion des formulaires
 async function handleAbonnementSubmit(e) {
@@ -668,7 +557,8 @@ async function handleAbonnementSubmit(e) {
     
     // Convertir les valeurs numériques
     data.prix = parseFloat(data.prix);
-    data.categorie_id = data.categorie_id ? parseInt(data.categorie_id) : null;
+    if (data.nb_jours) data.nb_jours = parseInt(data.nb_jours);
+    // Suppression de la gestion de la catégorie
     data.actif = document.getElementById('abonnement-actif')?.checked ? 1 : 0;
     
     try {
@@ -687,84 +577,35 @@ async function handleAbonnementSubmit(e) {
             });
         }
         
-        if (response.ok) {
-            await loadAbonnements();
-            
-            // Rafraîchir l'affichage en fonction de la section active
-            const activeSection = document.querySelector('.content-section.active');
-            if (activeSection) {
-                const sectionId = activeSection.id.replace('-section', '');
-                switch(sectionId) {
-                    case 'dashboard':
-                        await loadDashboard();
-                        break;
-                    case 'abonnements':
-                        displayAbonnements();
-                        break;
-                    case 'statistiques':
-                        await loadStatistiques();
-                        break;
+            if (response.ok) {
+                // Rechargement partiel : recharge les abonnements et la section courante
+                await loadAbonnements();
+                const activeSection = document.querySelector('.content-section.active');
+                if (activeSection) {
+                    const sectionId = activeSection.id.replace('-section', '');
+                    switch(sectionId) {
+                        case 'dashboard':
+                            await loadDashboard();
+                            break;
+                        case 'abonnements':
+                            displayAbonnements();
+                            break;
+                        case 'statistiques':
+                            await loadStatistiques();
+                            break;
+                    }
                 }
+                closeAbonnementModal();
+                showNotification(currentEditId ? 'Abonnement modifié avec succès' : 'Abonnement créé avec succès', 'success');
+            } else {
+                throw new Error('Erreur lors de l\'enregistrement');
             }
-            
-            closeAbonnementModal();
-            showNotification(
-                currentEditId ? 'Abonnement modifié avec succès' : 'Abonnement créé avec succès',
-                'success'
-            );
-        } else {
-            throw new Error('Erreur lors de l\'enregistrement');
-        }
     } catch (error) {
         console.error('Erreur:', error);
         showNotification('Erreur lors de l\'enregistrement', 'error');
     }
 }
 
-async function handleCategorySubmit(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-    
-    try {
-        const response = await fetch(`${API_BASE}/categories`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        
-        if (response.ok) {
-            closeCategoryModal();
-            await loadCategories();
-            updateCategorySelects();
-            
-            // Rafraîchir l'affichage en fonction de la section active
-            const activeSection = document.querySelector('.content-section.active');
-            if (activeSection) {
-                const sectionId = activeSection.id.replace('-section', '');
-                switch(sectionId) {
-                    case 'dashboard':
-                        await loadDashboard();
-                        break;
-                    case 'categories':
-                        displayCategories();
-                        break;
-                    case 'statistiques':
-                        await loadStatistiques();
-                        break;
-                }
-            }
-            
-            showNotification('Catégorie ajoutée avec succès', 'success');
-        } else {
-            throw new Error('Erreur lors de la sauvegarde');
-        }
-    } catch (error) {
-        console.error('Erreur:', error);
-        showNotification('Erreur lors de la sauvegarde', 'error');
-    }
-}
 
 // Actions CRUD
 
@@ -814,28 +655,11 @@ async function deleteAbonnement(id) {
         const response = await fetch(`${API_BASE}/abonnements/${id}`, {
             method: 'DELETE'
         });
-        
         if (response.ok) {
             await loadAbonnements();
-            
-            // Rafraîchir l'affichage en fonction de la section active
-            const activeSection = document.querySelector('.content-section.active');
-            if (activeSection) {
-                const sectionId = activeSection.id.replace('-section', '');
-                switch(sectionId) {
-                    case 'dashboard':
-                        await loadDashboard();
-                        break;
-                    case 'abonnements':
-                        displayAbonnements();
-                        break;
-                    case 'statistiques':
-                        await loadStatistiques();
-                        break;
-                }
-            }
-            
-            showNotification('Abonnement supprimé avec succès', 'success');
+            await loadDashboard();
+            displayAbonnements();
+            showNotification('Abonnement supprimé', 'success');
         } else {
             throw new Error('Erreur lors de la suppression');
         }
@@ -845,45 +669,6 @@ async function deleteAbonnement(id) {
     }
 }
 
-async function deleteCategorie(id) {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) return;
-    
-    try {
-        const response = await fetch(`${API_BASE}/categories/${id}`, {
-            method: 'DELETE'
-        });
-        
-        if (response.ok) {
-            await loadCategories();
-            updateCategorySelects();
-            
-            // Rafraîchir l'affichage en fonction de la section active
-            const activeSection = document.querySelector('.content-section.active');
-            if (activeSection) {
-                const sectionId = activeSection.id.replace('-section', '');
-                switch(sectionId) {
-                    case 'dashboard':
-                        await loadDashboard();
-                        break;
-                    case 'categories':
-                        displayCategories();
-                        break;
-                    case 'statistiques':
-                        await loadStatistiques();
-                        break;
-                }
-            }
-            
-            showNotification('Catégorie supprimée avec succès', 'success');
-        } else {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Erreur lors de la suppression');
-        }
-    } catch (error) {
-        console.error('Erreur:', error);
-        showNotification(error.message, 'error');
-    }
-}
 
 async function toggleAbonnement(id) {
     try {
@@ -926,61 +711,13 @@ function handleSearch(e) {
     const query = e.target.value.toLowerCase();
     const filtered = abonnements.filter(abonnement =>
         abonnement.nom.toLowerCase().includes(query) ||
-        (abonnement.description && abonnement.description.toLowerCase().includes(query)) ||
-        (abonnement.categorie_nom && abonnement.categorie_nom.toLowerCase().includes(query))
+        (abonnement.description && abonnement.description.toLowerCase().includes(query))
     );
     displayAbonnements(filtered);
 }
 
-function handleFilter() {
-    const categoryFilter = document.getElementById('category-filter');
-    const statusFilter = document.getElementById('status-filter');
-    
-    const categoryValue = categoryFilter ? categoryFilter.value : '';
-    const statusValue = statusFilter ? statusFilter.value : '';
-    
-    let filtered = abonnements;
-    
-    if (categoryValue) {
-        filtered = filtered.filter(a => a.categorie_id == categoryValue);
-    }
-    
-    if (statusValue) {
-        if (statusValue === 'actif') {
-            // Filtrer les abonnements actifs (actif = 1 ou true)
-            filtered = filtered.filter(a => a.actif === 1 || a.actif === true);
-        } else if (statusValue === 'inactif') {
-            // Filtrer les abonnements inactifs (actif = 0 ou false)
-            filtered = filtered.filter(a => a.actif === 0 || a.actif === false);
-        }
-    }
-    
-    console.log('Filtrage:', { categoryValue, statusValue, totalResults: filtered.length });
-    displayAbonnements(filtered);
-}
 
 // Utilitaires
-function updateCategorySelects() {
-    const selects = ['categorie_id', 'category-filter'];
-    
-    selects.forEach(selectId => {
-        const select = document.getElementById(selectId);
-        if (!select) return;
-        
-        // Garder les options par défaut
-        const defaultOptions = Array.from(select.querySelectorAll('option')).filter(opt => !opt.value);
-        
-        select.innerHTML = '';
-        defaultOptions.forEach(opt => select.appendChild(opt));
-        
-        categories.forEach(category => {
-            const option = document.createElement('option');
-            option.value = category.id;
-            option.textContent = category.nom;
-            select.appendChild(option);
-        });
-    });
-}
 
 function formatCurrency(amount, currency = 'EUR') {
     const symbols = { EUR: '€', USD: '$', GBP: '£' };
@@ -1020,170 +757,27 @@ function showNotification(message, type = 'info') {
         const notification = document.createElement('div');
         notification.style.cssText = `
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 1rem 1.5rem;
+            bottom: 2rem;
+            right: 2rem;
+            background: #fff;
+            color: #333;
             border-radius: 8px;
-            color: white;
-            z-index: 1001;
-            font-family: Arial, sans-serif;
-            max-width: 400px;
-            background-color: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff'};
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            padding: 1rem 2rem;
+            z-index: 9999;
+            min-width: 200px;
+            font-size: 1rem;
+            border-left: 5px solid ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : '#2196f3'};
         `;
-        notification.textContent = message;
-        
+        notification.innerHTML = `
+            <div>${message}</div>
+            <button onclick="this.parentElement.remove()" style="background: none; border: none; float: right; cursor: pointer;">×</button>
+        `;
         document.body.appendChild(notification);
-        
         setTimeout(() => {
-            if (notification.parentElement) {
-                notification.remove();
-            }
+            if (notification.parentElement) notification.remove();
         }, 5000);
     }
 }
 
-// Fonctions responsive
-function detectDevice() {
-    const width = window.innerWidth;
-    const userAgent = navigator.userAgent.toLowerCase();
-    
-    isMobile = width <= 768 || /mobile|android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
-    isTablet = width > 768 && width <= 992;
-    
-    console.log(`📱 Appareil détecté: ${isMobile ? 'Mobile' : isTablet ? 'Tablette' : 'Desktop'} (${width}px)`);
-    
-    // Ajouter des classes CSS pour le responsive
-    document.body.classList.toggle('is-mobile', isMobile);
-    document.body.classList.toggle('is-tablet', isTablet);
-    document.body.classList.toggle('is-desktop', !isMobile && !isTablet);
-}
-
-function setupResponsive() {
-    // Gérer les changements d'orientation et de taille
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            detectDevice();
-            handleOrientationChange();
-        }, 150);
-    });
-    
-    // Gérer les changements d'orientation spécifiquement
-    window.addEventListener('orientationchange', () => {
-        setTimeout(() => {
-            detectDevice();
-            handleOrientationChange();
-        }, 300);
-    });
-    
-    // Améliorer les interactions tactiles
-    if (isMobile) {
-        setupTouchInteractions();
-    }
-    
-    // Optimiser les modales pour mobile
-    setupMobileModals();
-    
-    console.log('✅ Configuration responsive terminée');
-}
-
-function handleOrientationChange() {
-    const orientation = window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
-    console.log(`🔄 Orientation changée: ${orientation}`);
-    
-    document.body.classList.toggle('is-portrait', orientation === 'portrait');
-    document.body.classList.toggle('is-landscape', orientation === 'landscape');
-    
-    // Réajuster les grilles si nécessaire
-    if (isMobile && orientation === 'landscape') {
-        // Optimiser l'affichage en mode paysage
-        const dashboardContent = document.querySelector('.dashboard-content');
-        if (dashboardContent) {
-            dashboardContent.style.gridTemplateColumns = '2fr 1fr';
-        }
-    }
-}
-
-function setupTouchInteractions() {
-    // Améliorer le scroll horizontal sur mobile pour la navigation
-    const sidebarMenu = document.querySelector('.sidebar-menu');
-    if (sidebarMenu && isMobile) {
-        // Permettre le scroll tactile horizontal
-        sidebarMenu.style.webkitOverflowScrolling = 'touch';
-        sidebarMenu.style.scrollbarWidth = 'none';
-        
-        // Indiquer visuellement que c'est scrollable
-        sidebarMenu.classList.add('touch-scrollable');
-    }
-    
-    // Améliorer les interactions tactiles sur les cartes
-    const cards = document.querySelectorAll('.abonnement-card, .stat-card, .category-card');
-    cards.forEach(card => {
-        card.addEventListener('touchstart', () => {
-            card.style.transform = 'scale(0.98)';
-        }, { passive: true });
-        
-        card.addEventListener('touchend', () => {
-            setTimeout(() => {
-                card.style.transform = '';
-            }, 150);
-        }, { passive: true });
-    });
-    
-    console.log('✅ Interactions tactiles configurées');
-}
-
-function setupMobileModals() {
-    // Observer les modales pour les adapter au mobile
-    const modals = document.querySelectorAll('.modal');
-    
-    modals.forEach(modal => {
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                    if (modal.classList.contains('show') && isMobile) {
-                        // Empêcher le scroll de l'arrière-plan
-                        document.body.style.overflow = 'hidden';
-                        
-                        // Focus sur le premier champ de saisie
-                        const firstInput = modal.querySelector('input, select, textarea');
-                        if (firstInput) {
-                            setTimeout(() => firstInput.focus(), 300);
-                        }
-                    } else if (!modal.classList.contains('show')) {
-                        // Restaurer le scroll
-                        document.body.style.overflow = '';
-                    }
-                }
-            });
-        });
-        
-        observer.observe(modal, { attributes: true });
-    });
-    
-    console.log('✅ Modales mobiles configurées');
-}
-
-// Fonction utilitaire pour détecter si on est sur un appareil tactile
-function isTouchDevice() {
-    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-}
-
-// Fonction pour optimiser les performances sur mobile
-function optimizeForMobile() {
-    if (isMobile) {
-        // Réduire les animations pour les appareils moins puissants
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-        if (prefersReducedMotion.matches) {
-            document.body.classList.add('reduce-motion');
-        }
-        
-        // Optimiser les images (si applicable)
-        const images = document.querySelectorAll('img');
-        images.forEach(img => {
-            img.loading = 'lazy';
-        });
-    }
-}
 
