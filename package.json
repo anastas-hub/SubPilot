@@ -70,9 +70,7 @@
       "menuCategory": "AnastasHUB",
       "perMachine": false,
       "upgradeCode": "{A1B2C3D4-E5F6-7890-1234-56789ABCDEF0}",
-      "artifactName": "SubPilot-Installer-${version}.${ext}",
-      "description": "SubPilot - Gestionnaire d'abonnements simple et élégant",
-      "manufacturer": "anastas-hub"
+      "artifactName": "SubPilot-Installer-${version}.${ext}"
     }
   }
 }
