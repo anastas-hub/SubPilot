@@ -48,6 +48,7 @@ jobs:
           tag_name: v${{ steps.get_version.outputs.version }}
           name: Release v${{ steps.get_version.outputs.version }}
           files: |
-            dist/**
+            dist/SubPilot-Setup-*.exe
+            dist/SubPilot-Installer-*.msi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
