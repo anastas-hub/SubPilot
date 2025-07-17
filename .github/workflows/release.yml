@@ -33,7 +33,7 @@ jobs:
       - name: Build app
         run: npm run build
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Get version
         id: get_version
@@ -50,4 +50,4 @@ jobs:
           files: |
             dist/**
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN  }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
