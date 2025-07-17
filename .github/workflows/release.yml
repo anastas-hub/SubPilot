@@ -7,6 +7,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -24,23 +27,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Rebuild native modules (if needed)
-        run: |
-          if (Test-Path "node_modules") {
-            npm run rebuild
-          }
-
       - name: Build app
         run: npm run build
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Get version
         id: get_version
-        shell: pwsh
-        run: |
-          $version = node -p "(require('./package.json').version)"
-          echo "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        shell: bash
+        run: echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -50,4 +43,4 @@ jobs:
           files: |
             dist/**
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
