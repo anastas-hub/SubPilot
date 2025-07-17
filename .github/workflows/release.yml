@@ -27,7 +27,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Rebuild native modules (better-sqlite3)
+        run: npx electron-rebuild
+
       - name: Build app
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build
 
       - name: Get version
