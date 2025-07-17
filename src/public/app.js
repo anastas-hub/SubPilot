@@ -38,7 +38,12 @@ let abonnementForm = null;
 document.addEventListener("DOMContentLoaded", async function () {
   try {
     await new Promise((resolve) => setTimeout(resolve, 100));
-    const SUBPILOT_VERSION = "1.0.1";
+    let SUBPILOT_VERSION = "";
+    if (window.subpilot && window.subpilot.version) {
+      SUBPILOT_VERSION = window.subpilot.version;
+    } else {
+      SUBPILOT_VERSION = "1.0.4";
+    }
     const sidebarVersion = document.getElementById("sidebar-version");
     if (sidebarVersion) {
       const versionEl = document.createElement("span");

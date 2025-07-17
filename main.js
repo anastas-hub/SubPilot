@@ -15,8 +15,9 @@ function createWindow() {
     minWidth: 800,
     minHeight: 600,
     webPreferences: {
-      nodeIntegration: true,
+      nodeIntegration: false,
       contextIsolation: true,
+      preload: path.join(__dirname, "preload.js"),
       enableRemoteModule: false,
     },
     icon: path.join(__dirname, "assets", "icon.png"),
