@@ -38,25 +38,26 @@ let abonnementForm = null;
 document.addEventListener("DOMContentLoaded", async function () {
   try {
     await new Promise((resolve) => setTimeout(resolve, 100));
-    let SUBPILOT_VERSION = "";
-    if (window.subpilot && window.subpilot.version) {
-      SUBPILOT_VERSION = window.subpilot.version;
-    } else {
-      SUBPILOT_VERSION = "1.0.4";
-    }
-    const sidebarVersion = document.getElementById("sidebar-version");
-    if (sidebarVersion) {
-      const versionEl = document.createElement("span");
-      versionEl.textContent = `v${SUBPILOT_VERSION}`;
-      versionEl.style.fontSize = "0.95em";
-      versionEl.style.color = "#6366f1";
-      versionEl.style.fontWeight = "600";
-      versionEl.style.background = "#eef2ff";
-      versionEl.style.borderRadius = "6px";
-      versionEl.style.padding = "2px 8px";
-      versionEl.style.marginTop = "2px";
-      sidebarVersion.appendChild(versionEl);
-    }
+    // Récupère dynamiquement la version depuis l'API backend
+    fetch("/api/version")
+      .then((res) => res.json())
+      .then((data) => {
+        const version = data.version || "";
+        const sidebarVersion = document.getElementById("sidebar-version");
+        if (sidebarVersion) {
+          const versionEl = document.createElement("span");
+          versionEl.textContent = `v${version}`;
+          versionEl.style.fontSize = "0.95em";
+          versionEl.style.color = "#6366f1";
+          versionEl.style.fontWeight = "600";
+          versionEl.style.background = "#eef2ff";
+          versionEl.style.borderRadius = "6px";
+          versionEl.style.padding = "2px 8px";
+          versionEl.style.marginTop = "2px";
+          sidebarVersion.appendChild(versionEl);
+        }
+      })
+      .catch(() => {});
     initializeApp();
     setupEventListeners();
     await loadData();

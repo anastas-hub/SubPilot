@@ -1,6 +1,19 @@
+
 const express = require("express");
 const router = express.Router();
+const fs = require("fs");
+const path = require("path");
 const { abonnements } = require("../database");
+
+// Route pour obtenir la version du package.json
+router.get("/version", (req, res) => {
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, "../../package.json"), "utf8"));
+    res.json({ version: pkg.version });
+  } catch (e) {
+    res.status(500).json({ error: "Impossible de lire la version" });
+  }
+});
 
 router.patch("/abonnements/:id/trash", async (req, res) => {
   try {
