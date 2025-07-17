@@ -1,6 +1,6 @@
 {
   "name": "subpilot",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Application de gestion d'abonnements simple et élégante",
   "main": "main.js",
   "scripts": {
@@ -19,8 +19,7 @@
   },
   "dependencies": {
     "better-sqlite3": "^12.2.0",
-    "express": "^4.18.2",
-    "smart-buffer": "^4.2.0"
+    "express": "^4.18.2"
   },
   "build": {
     "appId": "com.anastas.subpilot",
@@ -40,6 +39,12 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "msi",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/icon.ico"
@@ -48,7 +53,26 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "shortcutName": "SubPilot",
+      "menuCategory": "AnastasHUB",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "license": "LICENSE",
+      "runAfterFinish": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": true,
+      "artifactName": "SubPilot-Setup-${version}.${ext}"
+    },
+    "msi": {
+      "shortcutName": "SubPilot",
+      "menuCategory": "AnastasHUB",
+      "perMachine": false,
+      "upgradeCode": "{A1B2C3D4-E5F6-7890-1234-56789ABCDEF0}",
+      "artifactName": "SubPilot-Installer-${version}.${ext}",
+      "description": "SubPilot - Gestionnaire d'abonnements simple et élégant",
+      "manufacturer": "anastas-hub"
     }
   }
 }
