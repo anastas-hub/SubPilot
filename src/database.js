@@ -18,7 +18,18 @@ if (fs.existsSync(CONFIG_PATH)) {
 
 let abonnementsCache = [];
 let store = null;
-const DATA_PATH = path.join(__dirname, "../data/abonnements.json");
+let DATA_PATH;
+try {
+  // Si on est dans Electron, utiliser le dossier userData pour la persistance
+  const electron = require('electron');
+  DATA_PATH = path.join(
+    (electron.app || electron.remote.app).getPath('userData'),
+    'abonnements.json'
+  );
+} catch (e) {
+  // Fallback pour le dev pur Node.js (tests, etc.)
+  DATA_PATH = path.join(__dirname, '../data/abonnements.json');
+}
 
 if (isDev) {
   if (!fs.existsSync(path.dirname(DATA_PATH))) {
