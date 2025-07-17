@@ -5,7 +5,6 @@ const fs = require("fs");
 const path = require("path");
 const { abonnements } = require("../database");
 
-// Route pour obtenir la version du package.json
 router.get("/version", (req, res) => {
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, "../../package.json"), "utf8"));

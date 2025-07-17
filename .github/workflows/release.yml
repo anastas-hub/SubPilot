@@ -10,6 +10,7 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -18,26 +19,32 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Rebuild native modules
-        run: npm run rebuild
+      - name: Rebuild native modules (if needed)
+        run: |
+          if (Test-Path "node_modules") {
+            npm run rebuild
+          }
 
       - name: Build app
         run: npm run build
 
       - name: Get version
         id: get_version
+        shell: bash
         run: |
-          echo "version=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+          echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
 
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.get_version.outputs.version }}
           name: Release v${{ steps.get_version.outputs.version }}
-          files: dist/*
+          files: |
+            dist/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

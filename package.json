@@ -1,6 +1,6 @@
 {
   "name": "subpilot",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Application de gestion d'abonnements simple et élégante",
   "main": "main.js",
   "scripts": {

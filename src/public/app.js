@@ -38,7 +38,6 @@ let abonnementForm = null;
 document.addEventListener("DOMContentLoaded", async function () {
   try {
     await new Promise((resolve) => setTimeout(resolve, 100));
-    // Récupère dynamiquement la version depuis l'API backend
     fetch("/api/version")
       .then((res) => res.json())
       .then((data) => {
