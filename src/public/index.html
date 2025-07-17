@@ -1,173 +1,238 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self';">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0">
-    <meta name="description" content="SubPilot - Gestionnaire intelligent d'abonnements pour suivre et optimiser vos dépenses récurrentes">
-    <meta name="theme-color" content="#6366f1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="SubPilot">
-    
+  <head>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self';"
+    />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0" />
+    <meta
+      name="description"
+      content="SubPilot - Gestionnaire intelligent d'abonnements pour suivre et optimiser vos dépenses récurrentes"
+    />
+    <meta name="theme-color" content="#6366f1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="SubPilot" />
+
     <title>SubPilot - Gestionnaire d'abonnements</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="context-menu.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-</head>
-<body>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="context-menu.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  </head>
+  <body>
     <div class="app-container">
-        <!-- Sidebar -->
-        <nav class="sidebar">
-            <div class="sidebar-header" style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.3em;">
-                <h1 style="margin-bottom:0;"><i class="fas fa-rocket"></i> SubPilot</h1>
+      <!-- Sidebar -->
+      <nav class="sidebar">
+        <div class="sidebar-header" style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.3em">
+          <h1 style="margin-bottom: 0"><i class="fas fa-rocket"></i> SubPilot</h1>
+        </div>
+        <ul class="sidebar-menu">
+          <li class="menu-item active" data-section="dashboard">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Tableau de bord</span>
+          </li>
+          <li class="menu-item" data-section="abonnements">
+            <i class="fas fa-credit-card"></i>
+            <span>Abonnements</span>
+          </li>
+          <li class="menu-item" data-section="corbeille">
+            <i class="fas fa-trash"></i>
+            <span>Corbeille</span>
+          </li>
+        </ul>
+        <div
+          id="sidebar-version"
+          style="
+            position: absolute;
+            left: 0;
+            bottom: 18px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          "
+        >
+          <!-- Version dynamique JS -->
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <header class="content-header">
+          <h2 id="page-title">Tableau de bord</h2>
+          <div class="header-actions">
+            <button class="btn btn-primary" id="add-abonnement-btn">
+              <i class="fas fa-plus"></i> Nouvel abonnement
+            </button>
+          </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard-section" class="content-section active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-list-ol"></i>
+              </div>
+              <div class="stat-content">
+                <h3 id="total-abonnements">0</h3>
+                <p>Total abonnements</p>
+                <div style="display: flex; gap: 1.5rem; justify-content: center; margin-top: 0.5rem">
+                  <span style="color: #22c55e"
+                    ><i class="fas fa-user-check"></i> <span id="total-actifs">0</span> actifs</span
+                  >
+                  <span style="color: #ef4444"
+                    ><i class="fas fa-user-slash"></i> <span id="total-inactifs">0</span> inactifs</span
+                  >
+                  <span style="color: #6366f1"
+                    ><i class="fas fa-trash"></i> <span id="total-corbeille-mini">0</span> corbeille</span
+                  >
+                </div>
+              </div>
             </div>
-            <ul class="sidebar-menu">
-            <ul class="sidebar-menu">
-                <li class="menu-item active" data-section="dashboard">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span>Tableau de bord</span>
-                </li>
-                <li class="menu-item" data-section="abonnements">
-                    <i class="fas fa-credit-card"></i>
-                    <span>Abonnements</span>
-                </li>
-                <li class="menu-item" data-section="corbeille">
-                    <i class="fas fa-trash"></i>
-                    <span>Corbeille</span>
-                </li>
-            </ul>
-            <div id="sidebar-version" style="position: absolute; left: 0; bottom: 18px; width: 100%; display: flex; justify-content: center; align-items: center;">
-                <!-- Version dynamique JS -->
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-euro-sign"></i>
+              </div>
+
+              <div class="stat-content" style="display: flex; flex-direction: column; gap: 0.5em">
+                <div
+                  style="
+                    background: #e0f7fa;
+                    border-radius: 8px;
+                    padding: 0.5em 0.8em;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.2em;
+                    font-weight: 600;
+                    font-size: 1.15em;
+                    color: #0288d1;
+                  "
+                >
+                  <span style="display: flex; align-items: center; gap: 0.5em"
+                    ><i class="fas fa-calendar-day"></i> Mensuel : <span id="cout-mensuel">0,00 €</span></span
+                  >
+                  <span style="font-size: 0.95em; color: #0891b2; font-weight: 400; margin-left: 2em"
+                    >dont <span id="val-mensuel">0,00 €</span> mensuel</span
+                  >
+                </div>
+                <div
+                  style="
+                    background: #f3e8ff;
+                    border-radius: 8px;
+                    padding: 0.5em 0.8em;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.2em;
+                    font-size: 1em;
+                    color: #7c3aed;
+                  "
+                >
+                  <span style="display: flex; align-items: center; gap: 0.5em"
+                    ><i class="fas fa-calendar-alt"></i> Annuel : <span id="cout-annuel">0,00 €</span></span
+                  >
+                  <span style="font-size: 0.95em; color: #a21caf; font-weight: 400; margin-left: 2em"
+                    >dont <span id="val-annuel">0,00 €</span> annuel</span
+                  >
+                </div>
+              </div>
             </div>
-        </nav>
+            <!-- fin .stat-card -->
+          </div>
+          <!-- fin .stats-grid -->
+        </section>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="content-header">
-                <h2 id="page-title">Tableau de bord</h2>
-                <div class="header-actions">
-                    <button class="btn btn-primary" id="add-abonnement-btn">
-                        <i class="fas fa-plus"></i> Nouvel abonnement
-                    </button>
-                </div>
-            </header>
+        <!-- Corbeille Section -->
+        <section id="corbeille-section" class="content-section">
+          <div class="corbeille-section">
+            <div id="corbeille-abonnements" class="abonnements-grid"></div>
+          </div>
+        </section>
 
-            <!-- Dashboard Section -->
-            <section id="dashboard-section" class="content-section active">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-list-ol"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h3 id="total-abonnements">0</h3>
-                            <p>Total abonnements</p>
-                            <div style="display: flex; gap: 1.5rem; justify-content: center; margin-top: 0.5rem;">
-                                <span style="color: #22c55e;"><i class="fas fa-user-check"></i> <span id="total-actifs">0</span> actifs</span>
-                                <span style="color: #ef4444;"><i class="fas fa-user-slash"></i> <span id="total-inactifs">0</span> inactifs</span>
-                                <span style="color: #6366f1;"><i class="fas fa-trash"></i> <span id="total-corbeille-mini">0</span> corbeille</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-euro-sign"></i>
-                        </div>
-                        <div class="stat-content" style="display: flex; flex-direction: column; gap: 0.5em;">
-                            <div style="background: #e0f7fa; border-radius: 8px; padding: 0.5em 0.8em; display: flex; flex-direction: column; gap: 0.2em; font-weight: 600; font-size: 1.15em; color: #0288d1;">
-                                <span style="display: flex; align-items: center; gap: 0.5em;"><i class="fas fa-calendar-day"></i> Mensuel : <span id="cout-mensuel">0,00 €</span></span>
-                                <span style="font-size:0.95em; color:#0891b2; font-weight:400; margin-left:2em;">dont <span id="val-mensuel">0,00 €</span> mensuel</span>
-                            </div>
-                            <div style="background: #f3e8ff; border-radius: 8px; padding: 0.5em 0.8em; display: flex; flex-direction: column; gap: 0.2em; font-size: 1em; color: #7c3aed;">
-                                <span style="display: flex; align-items: center; gap: 0.5em;"><i class="fas fa-calendar-alt"></i> Annuel : <span id="cout-annuel">0,00 €</span></span>
-                                <span style="font-size:0.95em; color:#a21caf; font-weight:400; margin-left:2em;">dont <span id="val-annuel">0,00 €</span> annuel</span>
-                            </div>
-                        </div>
-                <!-- Rien d'autre que les cartes -->
-            </section>
+        <!-- Abonnements Section -->
+        <section id="abonnements-section" class="content-section">
+          <div id="abonnements-list" class="abonnements-grid">
+            <!-- Les abonnements seront affichés ici -->
+          </div>
+        </section>
 
+        <!-- Suppression de la section Corbeille -->
 
-            <!-- Corbeille Section -->
-            <section id="corbeille-section" class="content-section">
-                <div class="corbeille-section">
-                    <div id="corbeille-abonnements" class="abonnements-grid"></div>
-                </div>
-            </section>
+        <!-- Suppression de la section Catégories -->
 
-            <!-- Abonnements Section -->
-            <section id="abonnements-section" class="content-section">
-                <div id="abonnements-list" class="abonnements-grid">
-                    <!-- Les abonnements seront affichés ici -->
-                </div>
-            </section>
-
-            <!-- Suppression de la section Corbeille -->
-
-            <!-- Suppression de la section Catégories -->
-
-            <!-- Suppression de la section Statistiques -->
-        </main>
+        <!-- Suppression de la section Statistiques -->
+      </main>
     </div>
 
     <!-- Modal Abonnement -->
     <div id="abonnement-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modal-title">Nouvel abonnement</h3>
-                <button class="close-btn" id="close-abonnement-modal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="abonnement-form" class="modal-form">
-                <div class="form-group">
-                    <label for="nom">Nom du service *</label>
-                    <input type="text" id="nom" name="nom" required>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="prix">Prix *</label>
-                        <input type="number" id="prix" name="prix" step="0.01" min="0" required>
-                    </div>
-                    <!-- Champ devise supprimé -->
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="frequence">Fréquence *</label>
-                        <select id="frequence" name="frequence" required>
-                            <option value="mensuel">Mensuel</option>
-                        </select>
-                    </div>
-                    <!-- Suppression du champ catégorie -->
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="date_debut">Date de début *</label>
-                        <input type="date" id="date_debut" name="date_debut" required>
-                    </div>
-                </div>
-                
-                <!-- Champs site web et description supprimés -->
-                
-
-                <div class="form-group" style="display: flex; align-items: center; gap: 12px; margin-top: 10px;">
-                    <input type="checkbox" id="abonnement-actif" name="actif" value="1" checked style="width: 22px; height: 22px; accent-color: var(--primary-color);">
-                    <label for="abonnement-actif" style="margin: 0; font-weight: 500; cursor: pointer;">Abonnement actif</label>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" id="cancel-abonnement">Annuler</button>
-                    <button type="submit" class="btn btn-primary">Enregistrer</button>
-                </div>
-            </form>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modal-title">Nouvel abonnement</h3>
+          <button class="close-btn" id="close-abonnement-modal">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
+        <form id="abonnement-form" class="modal-form">
+          <div class="form-group">
+            <label for="nom">Nom du service *</label>
+            <input type="text" id="nom" name="nom" required />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="prix">Prix *</label>
+              <input type="number" id="prix" name="prix" step="0.01" min="0" required />
+            </div>
+            <!-- Champ devise supprimé -->
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="frequence">Fréquence *</label>
+              <select id="frequence" name="frequence" required>
+                <option value="mensuel">Mensuel</option>
+              </select>
+            </div>
+            <!-- Suppression du champ catégorie -->
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="date_debut">Date de début *</label>
+              <input type="date" id="date_debut" name="date_debut" required />
+            </div>
+          </div>
+
+          <!-- Champs site web et description supprimés -->
+
+          <div class="form-group" style="display: flex; align-items: center; gap: 12px; margin-top: 10px">
+            <input
+              type="checkbox"
+              id="abonnement-actif"
+              name="actif"
+              value="1"
+              checked
+              style="width: 22px; height: 22px; accent-color: var(--primary-color)"
+            />
+            <label for="abonnement-actif" style="margin: 0; font-weight: 500; cursor: pointer">Abonnement actif</label>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="cancel-abonnement">Annuler</button>
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- Suppression du modal catégorie -->
@@ -176,5 +241,5 @@
     <div id="notification-container" class="notification-container"></div>
 
     <script src="app.js"></script>
-</body>
+  </body>
 </html>
