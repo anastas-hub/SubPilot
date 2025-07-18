@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu } = require("electron");
+const { app, BrowserWindow, Menu, dialog } = require("electron");
 const path = require("path");
 const express = require("express");
 const database = require("./src/database");
@@ -46,6 +46,20 @@ function createWindow() {
       app.quit();
     });
 
+  mainWindow.on("close", (e) => {
+    const choice = dialog.showMessageBoxSync(mainWindow, {
+      type: "question",
+      buttons: ["Annuler", "Quitter"],
+      defaultId: 1,
+      cancelId: 0,
+      title: "Quitter SubPilot",
+      message: "Êtes-vous sûr de vouloir quitter SubPilot ?",
+      detail: "Toutes les modifications non enregistrées seront perdues.",
+    });
+    if (choice === 0) {
+      e.preventDefault();
+    }
+  });
   mainWindow.on("closed", () => {
     mainWindow = null;
     if (server) {
@@ -139,14 +153,32 @@ app.whenReady().then(() => {
   });
 });
 
+
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
+  if (server) {
+    try {
+      server.close(() => {
+        if (process.platform !== "darwin") {
+          app.quit();
+        }
+      });
+    } catch (e) {
+      if (process.platform !== "darwin") {
+        app.quit();
+      }
+    }
+  } else {
+    if (process.platform !== "darwin") {
+      app.quit();
+    }
   }
 });
 
+
 app.on("before-quit", () => {
   if (server) {
-    server.close();
+    try {
+      server.close();
+    } catch (e) {}
   }
 });
