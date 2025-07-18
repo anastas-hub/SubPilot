@@ -1,3 +1,235 @@
+/* Accentuer et agrandir les textes 'actifs' et 'inactifs' dans le dashboard */
+.stat-card span#total-actifs, .stat-card span#total-inactifs {
+  font-size: 1.25em;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+}
+.stat-card span#total-actifs {
+  color: #22c55e;
+  text-shadow: 0 2px 8px rgba(34,197,94,0.13);
+}
+.stat-card span#total-inactifs {
+  color: #ef4444;
+  text-shadow: 0 2px 8px rgba(239,68,68,0.13);
+}
+.stat-card span#total-actifs + .stat-card, .stat-card span#total-inactifs + .stat-card {
+  margin-right: 0.2em;
+}
+/* Accentuation de la date sur les cartes d'abonnement */
+.abonnement-info small {
+  display: inline-block;
+  background: linear-gradient(90deg, #6366f1 0%, #a21caf 100%);
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.08em;
+  padding: 0.32em 1em;
+  border-radius: 1.5em;
+  box-shadow: 0 2px 8px 0 rgba(99,102,241,0.13);
+  border: 2px solid #a21caf;
+  letter-spacing: 0.03em;
+  text-shadow: 0 2px 8px rgba(99,102,241,0.13);
+  margin-top: 0.5em;
+  margin-bottom: 0.2em;
+  transition: background 0.3s, color 0.3s;
+}
+/* Amélioration visibilité du total abonnements */
+.stat-card h3#total-abonnements {
+  font-size: 2.5em;
+  font-weight: 800;
+  color: #6366f1;
+  margin-bottom: 0.15em;
+  letter-spacing: -0.01em;
+}
+.stat-card p {
+  font-size: 1.15em;
+  font-weight: 600;
+  color: #22223b;
+  margin-bottom: 0.2em;
+}
+body.dark-theme .stat-card h3#total-abonnements {
+  color: #a5b4fc;
+}
+body.dark-theme .stat-card p {
+  color: #e5e7ef;
+}
+.sidebar-menu .menu-item {
+  border-left: 3px solid #e5e7eb; /* gris clair par défaut */
+  transition: border-color 0.2s, background 0.2s;
+}
+.sidebar-menu .menu-item.active,
+.sidebar-menu .menu-item:hover {
+  border-left: 3px solid var(--primary-color);
+}
+.dark-theme .sidebar-menu .menu-item {
+  border-left: 3px solid #a5b4fc; /* violet clair, plus visible en dark */
+  /* Pour un effet plus doux, on peut aussi essayer: border-left: 3px solid rgba(165,180,252,0.45); */
+}
+.dark-theme .sidebar-menu .menu-item.active,
+.dark-theme .sidebar-menu .menu-item:hover {
+  border-left: 3px solid #a5b4fc;
+}
+/* Affichage flex uniquement quand la section paramètres est active */
+#settings-section.content-section.active {
+  display: flex;
+  flex-direction: row;
+  gap: 2.5em;
+  align-items: stretch;
+}
+.dark-theme .sidebar-menu .menu-item {
+  background: transparent;
+  color: #e5e7ef;
+  box-shadow: none;
+}
+.dark-theme .sidebar-menu .menu-item i {
+  color: #a5b4fc;
+}
+.dark-theme .sidebar-menu .menu-item.active,
+.dark-theme .sidebar-menu .menu-item:hover {
+  background: #282c37;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(60,60,90,0.18);
+}
+.dark-theme .sidebar-menu .menu-item.active i,
+.dark-theme .sidebar-menu .menu-item:hover i {
+  color: #fff;
+}
+/* Notifications en thème sombre */
+body.dark-theme .notification {
+  background: #232634;
+  color: #e5e7ef;
+  box-shadow: 0 1px 8px 0 rgba(30,30,50,0.18);
+  border-left-color: #6366f1;
+}
+body.dark-theme .notification.success {
+  border-left-color: #10b981;
+}
+body.dark-theme .notification.error {
+  border-left-color: #ef4444;
+}
+body.dark-theme .notification.info {
+  border-left-color: #06b6d4;
+}
+body.dark-theme .notification.warning {
+  border-left-color: #f59e0b;
+}
+/* --- Paramètres (Settings) --- */
+.settings-panel {
+  flex: 1;
+  min-width: 220px;
+  max-width: 400px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 1px 8px 0 rgba(60,60,90,0.08);
+  padding: 2em 1.5em;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  transition: background 0.3s, color 0.3s;
+}
+.settings-panel-title {
+  font-size: 1.25em;
+  font-weight: 700;
+  color: #6366f1;
+  margin-bottom: 1.2em;
+  letter-spacing: 0.01em;
+}
+.settings-input {
+  width: 100%;
+  margin-bottom: 1.2em;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  padding: 0.7em 1em;
+  font-size: 1.08em;
+  background: #f9fafb;
+  color: #222;
+  transition: border 0.2s, background 0.3s, color 0.3s;
+}
+.settings-input:focus {
+  border-color: #6366f1;
+  background: #fff;
+}
+.theme-switch-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5em;
+  margin-top: 0.5em;
+}
+.theme-switch-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  cursor: pointer;
+  font-size: 1.08em;
+  color: #222;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+.theme-icon-sun {
+  color: #fbbf24;
+  font-size: 1.2em;
+  transition: color 0.3s;
+}
+.theme-icon-moon {
+  color: #6366f1;
+  font-size: 1.2em;
+  transition: color 0.3s;
+}
+
+body.dark-theme .settings-panel {
+  background: #232634;
+  color: #e5e7ef;
+  box-shadow: 0 1px 8px 0 rgba(30,30,50,0.18);
+}
+body.dark-theme .settings-panel-title {
+  color: #a5b4fc;
+}
+body.dark-theme .settings-input {
+  background: #181a20;
+  color: #e5e7ef;
+  border: 1px solid #33374d;
+}
+body.dark-theme .settings-input:focus {
+  background: #232634;
+  border-color: #a5b4fc;
+}
+body.dark-theme .theme-switch-label {
+  color: #e5e7ef;
+}
+body.dark-theme .theme-icon-sun {
+  color: #fde68a;
+}
+body.dark-theme .theme-icon-moon {
+  color: #a5b4fc;
+}
+body.dark-theme {
+  background: #181a20;
+  color: #e5e7ef;
+}
+.dark-theme .sidebar {
+  background: #232634;
+  color: #e5e7ef;
+}
+.dark-theme .sidebar-menu .menu-item.active,
+.dark-theme .sidebar-menu .menu-item:hover {
+  background: #282c37;
+}
+.dark-theme .content-header,
+.dark-theme .main-content {
+  background: #1a1c23;
+  color: #e5e7ef;
+}
+.dark-theme input,
+.dark-theme textarea,
+.dark-theme select {
+  background: #232634;
+  color: #e5e7ef;
+  border: 1px solid #33374d;
+}
+.dark-theme .stat-card {
+  background: #232634;
+  color: #e5e7ef;
+}
 .no-abonnement-message,
 .no-abonnements-message,
 .no-subscription-message {
@@ -80,19 +312,9 @@
   opacity: 0.85;
 }
 /* Correctif : rendre tous les inputs et textarea éditables et visibles même dans les modales */
-input,
-textarea,
-select {
-  pointer-events: auto !important;
-  opacity: 1 !important;
-  background: #fff !important;
-  color: #222 !important;
-  z-index: 10;
-}
 
-.modal input,
-.modal textarea,
-.modal select {
+
+input, textarea, select {
   pointer-events: auto !important;
   opacity: 1 !important;
 }
@@ -156,28 +378,30 @@ body {
 }
 
 /* Sidebar moderne avec glassmorphism */
-.sidebar {
-  width: var(--sidebar-width);
-  background: var(--gradient-primary);
-  backdrop-filter: blur(20px);
-  color: var(--white);
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--box-shadow-lg);
-  z-index: 1000;
-  position: relative;
-  overflow: hidden;
+.since-date {
+  display: block;
+  margin-top: 0.18em;
+  font-size: 1.22em;
+  color: #fff;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  background: linear-gradient(90deg, #6366f1 60%, #8b5cf6 100%);
+  border-radius: 8px;
+  padding: 5px 18px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  border: 2px solid #6366f1;
+  box-shadow: 0 2px 10px 0 rgba(99,102,241,0.13);
+  text-shadow: 0 1px 4px rgba(60,60,90,0.18);
+  transition: background 0.3s, color 0.3s;
 }
-
-.sidebar::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-  pointer-events: none;
+body.dark-theme .since-date {
+  color: #181a20;
+  background: linear-gradient(90deg, #a5b4fc 60%, #6366f1 100%);
+  border: 2px solid #a5b4fc;
+  box-shadow: 0 2px 12px 0 rgba(165,180,252,0.18);
+  text-shadow: 0 1px 6px #232634;
 }
 
 .sidebar-header {
@@ -638,9 +862,20 @@ search-filter {
 }
 
 .abonnement-frequency {
-  font-size: 0.875rem;
-  opacity: 0.9;
-  font-weight: 500;
+  display: inline-block;
+  background: linear-gradient(90deg, #6366f1 0%, #a21caf 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.92em;
+  padding: 0.18em 0.7em;
+  border-radius: 1.2em;
+  box-shadow: 0 2px 8px 0 rgba(99,102,241,0.10);
+  border: 1.5px solid #a21caf;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 8px rgba(99,102,241,0.10);
+  margin-top: 0.3em;
+  margin-bottom: 0.1em;
+  transition: background 0.3s, color 0.3s;
 }
 
 .abonnement-body {

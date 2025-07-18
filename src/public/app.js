@@ -82,6 +82,42 @@ function initializeApp() {
 // ...existing code sans commentaires...
 
 function setupEventListeners() {
+
+  // Paramètres : gestion de la clé Gemini et du thème
+  const geminiKeyInput = document.getElementById("gemini-api-key");
+  const saveGeminiKeyBtn = document.getElementById("save-gemini-key");
+  const themeLight = document.getElementById("theme-light");
+  const themeDark = document.getElementById("theme-dark");
+
+  // --- Gestion de la clé Gemini ---
+  function loadGeminiKey() {
+    const key = localStorage.getItem("geminiApiKey") || "";
+    if (geminiKeyInput) geminiKeyInput.value = key;
+  }
+  function saveGeminiKey() {
+    if (geminiKeyInput) {
+      localStorage.setItem("geminiApiKey", geminiKeyInput.value.trim());
+      showNotification("Clé Gemini enregistrée", "success");
+    }
+  }
+  if (saveGeminiKeyBtn) saveGeminiKeyBtn.onclick = saveGeminiKey;
+  loadGeminiKey();
+
+  // --- Gestion du thème sombre/clair ---
+  function setTheme(mode) {
+    document.body.classList.toggle("dark-theme", mode === "dark");
+    localStorage.setItem("themeMode", mode);
+  }
+  function loadTheme() {
+    const mode = localStorage.getItem("themeMode") || "dark";
+    if (themeLight) themeLight.checked = mode === "light";
+    if (themeDark) themeDark.checked = mode === "dark";
+    setTheme(mode);
+  }
+  if (themeLight) themeLight.onchange = () => setTheme("light");
+  if (themeDark) themeDark.onchange = () => setTheme("dark");
+  loadTheme();
+// Fin de setupEventListeners
   try {
     const sidebar = document.querySelector(".sidebar-menu");
     if (sidebar) sidebar.addEventListener("click", handleNavigation);
@@ -135,6 +171,7 @@ async function showSection(sectionName, forceRefresh = false) {
       abonnements: "Mes abonnements",
       statistiques: "Statistiques",
       corbeille: "Corbeille",
+      settings: "Paramètres",
     };
     const pageTitle = document.getElementById("page-title");
     if (pageTitle) pageTitle.textContent = titles[sectionName] || "SubPilot";

@@ -34,6 +34,9 @@
       <nav class="sidebar">
         <div class="sidebar-header" style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.3em">
           <h1 style="margin-bottom: 0"><i class="fas fa-rocket"></i> SubPilot</h1>
+          <button class="btn btn-primary" id="add-abonnement-btn" style="margin-top: 0.7em; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5em;">
+            <i class="fas fa-plus"></i> Nouvel abonnement
+          </button>
         </div>
         <ul class="sidebar-menu">
           <li class="menu-item active" data-section="dashboard">
@@ -47,6 +50,10 @@
           <li class="menu-item" data-section="corbeille">
             <i class="fas fa-trash"></i>
             <span>Corbeille</span>
+          </li>
+          <li class="menu-item" data-section="settings">
+            <i class="fas fa-cog"></i>
+            <span>Paramètres</span>
           </li>
         </ul>
         <div
@@ -69,11 +76,7 @@
       <main class="main-content">
         <header class="content-header">
           <h2 id="page-title">Tableau de bord</h2>
-          <div class="header-actions">
-            <button class="btn btn-primary" id="add-abonnement-btn">
-              <i class="fas fa-plus"></i> Nouvel abonnement
-            </button>
-          </div>
+          <div class="header-actions"></div>
         </header>
 
         <!-- Dashboard Section -->
@@ -160,9 +163,36 @@
 
         <!-- Abonnements Section -->
         <section id="abonnements-section" class="content-section">
+          <div class="abonnements-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5em;"></div>
           <div id="abonnements-list" class="abonnements-grid">
             <!-- Les abonnements seront affichés ici -->
           </div>
+        </section>
+
+        <!-- Paramètres Section -->
+        <section id="settings-section" class="content-section">
+          <!-- Zone de gestion de la clé API Gemini -->
+          <div class="settings-panel settings-api-panel">
+            <h3 class="settings-panel-title">Clé API Gemini</h3>
+            <input id="gemini-api-key" type="text" placeholder="Collez votre clé API Gemini ici" class="settings-input" />
+            <button class="btn btn-primary" id="save-gemini-key" style="margin-top: 0.2em; align-self: flex-end; min-width: 120px; font-size: 1.08em;">Enregistrer</button>
+          </div>
+          <!-- Système de thème sombre/clair -->
+          <div class="settings-panel settings-theme-panel">
+            <h3 class="settings-panel-title">Thème</h3>
+            <div class="theme-switch-row">
+              <label class="theme-switch-label">
+                <input type="radio" name="theme-mode" value="light" id="theme-light" />
+                <i class="fas fa-sun theme-icon-sun"></i> Clair
+              </label>
+              <label class="theme-switch-label">
+                <input type="radio" name="theme-mode" value="dark" id="theme-dark" />
+                <i class="fas fa-moon theme-icon-moon"></i> Sombre
+              </label>
+            </div>
+          </div>
+          <!-- Zone suppression totale -->
+
         </section>
 
         <!-- Suppression de la section Corbeille -->
@@ -179,18 +209,26 @@
         <div class="modal-header">
           <h3 id="modal-title">Nouvel abonnement</h3>
         </div>
-        <form id="abonnement-form" class="modal-form">
+        <form id="abonnement-form" class="modal-form" style="font-size: 0.95em;">
           <div class="form-group">
             <label for="nom">Nom du service *</label>
-            <input type="text" id="nom" name="nom" required />
+            <input type="text" id="nom" name="nom" required style="font-size: 0.95em;" />
           </div>
-
           <div class="form-row">
             <div class="form-group">
               <label for="prix">Prix *</label>
-              <input type="number" id="prix" name="prix" step="0.01" min="0" required />
+              <input type="number" id="prix" name="prix" step="0.01" min="-999999" required style="font-size: 0.95em;" />
             </div>
-            <!-- Champ devise supprimé -->
+            <div class="form-group">
+              <label for="promo-val">Promotion</label>
+              <div style="display: flex; gap: 0.5em; align-items: center;">
+                <input type="number" id="promo-val" name="promo-val" step="0.01" min="0" placeholder="0" style="width: 80px; font-size: 0.95em;" />
+                <select id="promo-type" name="promo-type" style="width: 60px; font-size: 0.95em;">
+                  <option value="%">%</option>
+                  <option value="€">€</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div class="form-row">
