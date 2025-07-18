@@ -1,11 +1,30 @@
 
 const express = require("express");
 const router = express.Router();
-const fs = require("fs");
 const path = require("path");
-
-const { abonnements } = require("../database");
+const fs = require("fs");
+const { abonnements, saveCache } = require("../database");
+const { loadAbonnementsBackup } = require("../database/autosave");
 const aiRoutes = require("./ai");
+
+const DATA_PATH = path.join(__dirname, '../data/abonnements.json');
+
+
+// API de restauration des abonnements depuis la sauvegarde automatique
+router.post("/abonnements/restore-backup", (req, res) => {
+  const backup = loadAbonnementsBackup();
+  if (!backup || !Array.isArray(backup)) {
+    return res.status(400).json({ error: "Aucune sauvegarde trouvée ou invalide." });
+  }
+  // Remplace le fichier principal
+  try {
+    fs.writeFileSync(DATA_PATH, JSON.stringify({ abonnements: backup }, null, 2), "utf8");
+    saveCache && saveCache();
+    res.json({ success: true, count: backup.length });
+  } catch (e) {
+    res.status(500).json({ error: "Erreur lors de la restauration: " + e.message });
+  }
+});
 
 router.use("/ai", aiRoutes);
 router.get("/version", (req, res) => {

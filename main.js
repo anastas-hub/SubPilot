@@ -46,20 +46,7 @@ function createWindow() {
       app.quit();
     });
 
-  mainWindow.on("close", (e) => {
-    const choice = dialog.showMessageBoxSync(mainWindow, {
-      type: "question",
-      buttons: ["Annuler", "Quitter"],
-      defaultId: 1,
-      cancelId: 0,
-      title: "Quitter SubPilot",
-      message: "Êtes-vous sûr de vouloir quitter SubPilot ?",
-      detail: "Toutes les modifications non enregistrées seront perdues.",
-    });
-    if (choice === 0) {
-      e.preventDefault();
-    }
-  });
+  // Suppression de la confirmation de fermeture pour permettre la fermeture forcée sans interaction
   mainWindow.on("closed", () => {
     mainWindow = null;
     if (server) {

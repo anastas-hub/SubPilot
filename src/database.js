@@ -1,3 +1,4 @@
+const { saveAbonnements } = require("./database/autosave");
 const fs = require("fs");
 const path = require("path");
 
@@ -102,6 +103,7 @@ const abonnements = {
       deleted_at: null,
     };
     abonnementsCache.push(abonnement);
+    saveAbonnements(abonnementsCache);
     saveCache();
     return Promise.resolve({ id, ...abonnement });
   },
@@ -114,12 +116,14 @@ const abonnements = {
       updated_at: getTimestamp(),
     };
     saveCache();
+    saveAbonnements(abonnementsCache);
     return Promise.resolve({ id, ...abonnementsCache[idx] });
   },
   delete: (id) => {
     const before = abonnementsCache.length;
     abonnementsCache = abonnementsCache.filter((a) => a.id !== id);
     saveCache();
+    saveAbonnements(abonnementsCache);
     return Promise.resolve({
       deletedId: id,
       deleted: before !== abonnementsCache.length,
@@ -130,6 +134,7 @@ const abonnements = {
     if (idx === -1) return Promise.reject("Not found");
     abonnementsCache[idx].deleted_at = getTimestamp();
     saveCache();
+    saveAbonnements(abonnementsCache);
     return Promise.resolve({ id, trashed: true });
   },
   restore: (id) => {
@@ -137,6 +142,7 @@ const abonnements = {
     if (idx === -1) return Promise.reject("Not found");
     abonnementsCache[idx].deleted_at = null;
     saveCache();
+    saveAbonnements(abonnementsCache);
     return Promise.resolve({ id, restored: true });
   },
   toggle: (id) => {
