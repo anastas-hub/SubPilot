@@ -94,14 +94,40 @@ function setupEventListeners() {
     const key = localStorage.getItem("geminiApiKey") || "";
     if (geminiKeyInput) geminiKeyInput.value = key;
   }
-  function saveGeminiKey() {
+  async function verifyGeminiKey(key) {
+    if (!key) return;
+    try {
+      const resp = await fetch("/api/ai/verify-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: key })
+      });
+      const data = await resp.json();
+      if (resp.ok && data.valid) {
+        showNotification("Clé Gemini valide", "success");
+      } else {
+        showNotification(data.error || "Clé Gemini invalide", "error");
+      }
+    } catch (e) {
+      showNotification("Erreur lors de la vérification de la clé Gemini", "error");
+    }
+  }
+  async function saveGeminiKey() {
     if (geminiKeyInput) {
-      localStorage.setItem("geminiApiKey", geminiKeyInput.value.trim());
+      const key = geminiKeyInput.value.trim();
+      localStorage.setItem("geminiApiKey", key);
       showNotification("Clé Gemini enregistrée", "success");
+      if (key) await verifyGeminiKey(key);
     }
   }
   if (saveGeminiKeyBtn) saveGeminiKeyBtn.onclick = saveGeminiKey;
   loadGeminiKey();
+  if (geminiKeyInput) {
+    geminiKeyInput.addEventListener("blur", async () => {
+      const key = geminiKeyInput.value.trim();
+      if (key) await verifyGeminiKey(key);
+    });
+  }
 
   // --- Gestion du thème sombre/clair ---
   function setTheme(mode) {
@@ -262,9 +288,94 @@ function updateDashboardCounts() {
   if (elCoutAnnuel)
     elCoutAnnuel.textContent =
       totalAnnuel.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
-  if (elValAnnuel)
-    elValAnnuel.textContent =
-      dontAnnuel.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+  if (elValAnnuel) {
+    const today = new Date().toISOString().split("T")[0];
+    const dateField = document.getElementById("date_debut");
+    if (dateField) dateField.value = today;
+
+    // --- Suggestion IA sur le champ nom ---
+    const nomInput = document.getElementById("nom");
+    if (nomInput) {
+      // Création du conteneur suggestions
+      let suggestionBox = document.createElement("div");
+      suggestionBox.id = "ai-suggestions";
+      suggestionBox.style.position = "absolute";
+      suggestionBox.style.background = "#222b";
+      suggestionBox.style.color = "#fff";
+      suggestionBox.style.zIndex = 9999;
+      suggestionBox.style.fontSize = "0.95em";
+      suggestionBox.style.borderRadius = "6px";
+      suggestionBox.style.boxShadow = "0 2px 8px #0002";
+      suggestionBox.style.display = "none";
+      suggestionBox.style.maxHeight = "180px";
+      suggestionBox.style.overflowY = "auto";
+      suggestionBox.style.width = nomInput.offsetWidth + "px";
+      suggestionBox.style.left = nomInput.offsetLeft + "px";
+      suggestionBox.style.top = (nomInput.offsetTop + nomInput.offsetHeight + 4) + "px";
+      suggestionBox.style.minWidth = "180px";
+      suggestionBox.style.boxSizing = "border-box";
+      nomInput.parentNode.style.position = "relative";
+      nomInput.parentNode.appendChild(suggestionBox);
+
+      let lastQuery = "";
+      let lastTimeout = null;
+      nomInput.addEventListener("input", async function () {
+      // Sélectionner la première suggestion avec Entrée
+      nomInput.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" && suggestionBox.style.display === "block") {
+          const firstSuggestion = suggestionBox.querySelector('.ai-suggestion');
+          if (firstSuggestion) {
+            nomInput.value = firstSuggestion.textContent;
+            suggestionBox.style.display = "none";
+            e.preventDefault();
+          }
+        }
+      });
+        const val = nomInput.value.trim();
+        if (!val || val.length < 2) {
+          suggestionBox.style.display = "none";
+          return;
+        }
+        if (val === lastQuery) return;
+        lastQuery = val;
+        if (lastTimeout) clearTimeout(lastTimeout);
+        lastTimeout = setTimeout(async () => {
+          suggestionBox.innerHTML = '<div style="padding:0.5em;opacity:0.7;">Recherche IA...</div>';
+          suggestionBox.style.display = "block";
+          try {
+            const geminiApiKey = localStorage.getItem("geminiApiKey") || "";
+            const resp = await fetch("/api/ai/services", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ query: val, apiKey: geminiApiKey })
+            });
+            const data = await resp.json();
+            if (data.services && Array.isArray(data.services) && data.services.length) {
+              suggestionBox.innerHTML = data.services.map(s => `<div class='ai-suggestion' style='padding:0.4em 1em;cursor:pointer;'>${s}</div>`).join("");
+              suggestionBox.style.display = "block";
+              // Clic sur suggestion
+              Array.from(suggestionBox.children).forEach(child => {
+                child.onclick = () => {
+                  nomInput.value = child.textContent;
+                  suggestionBox.style.display = "none";
+                };
+              });
+            } else {
+              suggestionBox.innerHTML = '<div style="padding:0.5em;opacity:0.7;">Aucune suggestion IA</div>';
+            }
+          } catch (e) {
+            suggestionBox.innerHTML = '<div style="padding:0.5em;opacity:0.7;">Erreur IA</div>';
+          }
+        }, 350);
+      });
+      // Masquer suggestions si clic ailleurs
+      document.addEventListener("click", (e) => {
+        if (!suggestionBox.contains(e.target) && e.target !== nomInput) {
+          suggestionBox.style.display = "none";
+        }
+      });
+    }
+  }
 }
 
 async function loadDashboard() {

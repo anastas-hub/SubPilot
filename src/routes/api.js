@@ -3,8 +3,11 @@ const express = require("express");
 const router = express.Router();
 const fs = require("fs");
 const path = require("path");
-const { abonnements } = require("../database");
 
+const { abonnements } = require("../database");
+const aiRoutes = require("./ai");
+
+router.use("/ai", aiRoutes);
 router.get("/version", (req, res) => {
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, "../../package.json"), "utf8"));
